@@ -1,0 +1,312 @@
+================================================================================
+  DISASTER LOGISTICS COMMAND CENTER (DLCC) ERP — PROGRESS REPORT
+  Generated: 2026-06-09T09:54 WIB
+================================================================================
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         1. STATUS PROGRESS KESELURUHAN                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  ┌─────────────────────────────────────────────────┐
+  │ Overall Completion:  ████████████████████░░  95% │
+  └─────────────────────────────────────────────────┘
+
+  [x] Database Schema            — 11 migrasi, 10 tabel
+  [x] Eloquent Models            — 10 model dengan relationships & scopes
+  [x] Authentication (RBAC)      — 4 role, middleware sliding-window session
+  [x] Service Layer              — OptimizationService + BurnRateService
+  [x] ML Pipeline                — UrgencyPredictor + training pipeline + .pkl
+  [x] FastAPI Microservice       — /predict-urgency + /optimize endpoints
+  [x] Two-Phase Protocol         — Phase 1A (ML) + Phase 1B (CVRPTW) + Phase 2 (Commit)
+  [x] CRUD Views (Admin Pusat)   — 4 form: stok, armada, pusat-distribusi, master-bantuan
+  [x] Public Map (Leaflet.js)    — GeoJSON, markers, routes, legend
+  [x] Architecture Gap Fixes     — 7/7 gaps identified, 7/7 fixed
+
+  [ ] End-to-End Integration Test — FastAPI + Laravel (belum ditest bersama)
+  [ ] Frontend Polish / UX       — Beberapa view masih basic styling
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         2. ARSITEKTUR SISTEM                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  ┌──────────────────────────────────────────────────────┐
+  │                    Browser (User)                      │
+  │        Leaflet.js Map + Bootstrap 5 Dashboard          │
+  └──────────────────┬───────────────────┬────────────────┘
+                     │ HTTP              │ AJAX
+                     ▼                   ▼
+  ┌──────────────────────────────────────────────────────┐
+  │              Laravel 11 (Monolith)                     │
+  │  ├── AuthController        (Login/Logout)              │
+  │  ├── AdminPusatController  (CRUD: pusat, stok, armada) │
+  │  ├── AdminDaerahController (Demand CRUD, scoped kab)   │
+  │  ├── SarController         (Rute toggle, desa status)  │
+  │  ├── KoordinatorController (Optimize, Review, Approve) │
+  │  ├── PublicController      (Map + GeoJSON API)         │
+  │  │                                                     │
+  │  ├── OptimizationService   (Two-Phase Protocol)        │
+  │  │   ├── Phase 1A: predictUrgency() -> FastAPI ML      │
+  │  │   ├── Phase 1B: triggerSimulation() -> FastAPI OR    │
+  │  │   └── Phase 2:  approveSimulation() -> DB Commit    │
+  │  │                                                     │
+  │  └── BurnRateService       (Deterministic urgency)     │
+  └──────────────────┬───────────────────────────────────┘
+                     │ HTTP POST
+                     ▼
+  ┌──────────────────────────────────────────────────────┐
+  │           FastAPI 0.111 (Microservice)                  │
+  │  ├── POST /api/predict-urgency  (ML RandomForest)      │
+  │  ├── POST /api/optimize         (OR-Tools CVRPTW)      │
+  │  └── GET  /api/health           (Status check)         │
+  └──────────────────────────────────────────────────────┘
+
+  DATABASE: SQLite (database.sqlite)
+  ML MODEL: urgency_predictor.pkl (RandomForestRegressor, R²=0.9191)
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         3. ALUR BISNIS (BUSINESS FLOW)                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  LANGKAH 1: Admin Daerah Input Demand
+  ─────────────────────────────────────
+  Admin Daerah (BPBD Cianjur) login → Pilih desa → Input barang + qty
+  → Sistem kalkulasi urgency score (BurnRate) → Status: DRAFT
+
+  LANGKAH 2: Admin Daerah Queue Demand
+  ─────────────────────────────────────
+  Admin review demand → Klik "Antrikan" → Status: DRAFT → QUEUED
+  (Demand siap untuk dioptimasi)
+
+  LANGKAH 3: Koordinator Trigger Optimasi
+  ────────────────────────────────────────
+  Koordinator klik "Jalankan Optimasi" →
+    → Phase 1A: ML predict urgency via FastAPI (update score 0-10)
+    → Phase 1B: Build distance matrix (Floyd-Warshall) → Send ke OR-Tools
+    → FastAPI solve CVRPTW → Return optimal routes
+  → Hasil simulasi disimpan di session → Redirect ke halaman review
+
+  LANGKAH 4: Koordinator Review (Human-in-the-Loop)
+  ──────────────────────────────────────────────────
+  Koordinator review rute, total jarak, distribusi beban kendaraan
+  → APPROVE atau REJECT
+
+  LANGKAH 5: State-Commit (Two-Phase Protocol)
+  ─────────────────────────────────────────────
+  Jika APPROVE:
+    → DB::beginTransaction()
+    → lockForUpdate() pada armada_kendaraan (pessimistic lock)
+    → lockForUpdate() pada stok_pusat
+    → Deduksi stok per item per desa
+    → Create manifest_pengiriman (status: In-Transit)
+    → Update armada status: Available → In-Transit
+    → Demand status: Queued → Manifested
+    → DB::commit()
+
+  LANGKAH 6: Penyelesaian Manifest
+  ────────────────────────────────
+  Koordinator buka halaman Manifest → Klik "Selesai" pada manifest In-Transit
+    → Manifest status: In-Transit → Delivered
+    → Demand status: Manifested → Fulfilled
+    → Armada status: In-Transit → Available (kembali ke pool)
+
+  LANGKAH 7: Tim SAR Monitoring
+  ─────────────────────────────
+  Tim SAR toggle status rute (terbuka/terblokir) via dashboard
+  Tim SAR toggle status desa (aman/terdampak, terisolasi/terhubung)
+  → Perubahan langsung mempengaruhi Floyd-Warshall di optimasi berikutnya
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  4. AKUN LOGIN UNTUK TESTING                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Server: http://localhost:8000
+
+  ┌──────────────────┬──────────────────────────┬──────────┐
+  │ Role             │ Email                    │ Password │
+  ├──────────────────┼──────────────────────────┼──────────┤
+  │ Admin Pusat      │ pusat@bnpb.go.id         │ password │
+  │ Admin Daerah     │ daerah@cianjur.go.id     │ password │
+  │ Tim SAR          │ sar@basarnas.go.id       │ password │
+  │ Koordinator      │ koor@dlcc.go.id          │ password │
+  └──────────────────┴──────────────────────────┴──────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  5. TABEL DATABASE (11 MIGRASI)                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  1.  akun_pemerintah       — Auth user (4 role + id_kabupaten FK)
+  2.  kabupaten             — Wilayah administratif (soft delete)
+  3.  pusat_distribusi      — Gudang / depot node
+  4.  desa                  — Desa terdampak (5 ML features + GPS)
+  5.  rute                  — Edge graph (jarak_km, status_akses)
+  6.  master_bantuan        — SKU barang bantuan (4 kategori)
+  7.  stok_pusat            — Stok per pusat per barang (surrogate PK)
+  8.  armada_kendaraan      — Kendaraan logistik (kapasitas berat + vol)
+  9.  manifest_pengiriman   — Manifest pengiriman (UUID, route_json)
+  10. demand_kebutuhan      — Permintaan bantuan (lifecycle 4 status)
+  11. route_json migration  — Tambah kolom route_json ke manifest
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              6. STATUS LIFECYCLE (State Machine)                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  DEMAND KEBUTUHAN:
+    [Draft] ──Admin Daerah──> [Queued] ──ML + Solver──> [Manifested] ──Complete──> [Fulfilled]
+
+  ARMADA KENDARAAN:
+    [Available] ──Approve──> [In-Transit] ──Complete──> [Available]
+                                    └──Breakdown──> [Maintenance] ──Repair──> [Available]
+
+  MANIFEST PENGIRIMAN:
+    [In-Transit] ──Complete──> [Delivered]
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              7. BUG FIXES YANG SUDAH DITERAPKAN                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  [x] Gap 1 — Missing Fulfilled transition
+      FIX: Tambah completeManifest() di KoordinatorController
+      FILE: app/Http/Controllers/KoordinatorController.php
+      ROUTE: POST /koordinator/manifest/{id}/complete
+
+  [x] Gap 2 — route_json tidak di fillable ManifestPengiriman
+      FIX: Tambah ke $fillable + JSON cast
+      FILE: app/Models/ManifestPengiriman.php
+
+  [x] Gap 3 — Admin Daerah tidak di-scope ke kabupaten
+      FIX: Tambah id_kabupaten FK ke akun_pemerintah + scope query
+      FILE: migration, AkunPemerintah model, AdminDaerahController, DatabaseSeeder
+
+  [x] Gap 4 — Rute tidak punya relationship ke graph node
+      FIX: Tambah resolveTitikAsal() dan resolveTitikTujuan()
+      FILE: app/Models/Rute.php
+
+  [x] Gap 5 — StokPusat composite PK menyebabkan Eloquent tidak bisa CRUD
+      FIX: Tambah surrogate id auto-increment, ubah composite PK jadi unique constraint
+      FILE: migration, app/Models/StokPusat.php
+
+  [x] Gap 6 — Runtime crash: $demand->barang->nama_barang (column = 'nama')
+      FIX: Ganti ke $demand->barang->nama
+      FILE: app/Services/OptimizationService.php:278
+
+  [x] Gap 7 — Score scale mismatch (BurnRate 0-100 vs ML 0-10)
+      FIX: Normalize BurnRateService output ke 0-10
+      FILE: app/Services/BurnRateService.php
+
+  [x] Unicode encoding fix (→ characters crash on Windows cp1252)
+      FIX: Replace → with -> in training scripts
+      FILE: ml-environment/notebook_urgency_training.py
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              8. PERMASALAHAN YANG BELUM SELESAI                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  1. END-TO-END TEST BELUM DILAKUKAN
+     FastAPI microservice belum dijalankan bersamaan dengan Laravel.
+     Perlu install: cd or-microservice && pip install -r requirements.txt
+     Lalu: uvicorn app.main:app --port 8001
+
+  2. PIP DEPENDENCY CONFLICT
+     opencv-python membutuhkan numpy>=2 tapi scikit-learn memasang numpy 1.26.4.
+     Solusi: pip install numpy>=2.0 atau hapus opencv-python jika tidak dipakai.
+
+  3. LOGIN TEST GAGAL DI BROWSER AUTOMATION
+     Login berhasil secara manual, tapi browser automation timeout.
+     Ini bukan bug kode — hanya issue tool testing.
+
+  4. FRONTEND VIEWS MASIH BASIC
+     Beberapa halaman dashboard (admin-daerah, koordinator) masih
+     menggunakan styling minimal. Perlu polish untuk production.
+
+  5. HALAMAN REVIEW SIMULASI
+     View koordinator/review.blade.php perlu ditingkatkan untuk
+     menampilkan visualisasi rute yang lebih informatif (peta + tabel).
+
+  6. VALIDASI DEMAND STORE — DOUBLE BATCH
+     AdminDaerahController::demandStore() menggenerate UUID baru per item,
+     bukan UUID batch yang shared. Ini benar secara DB (unique constraint),
+     tapi secara bisnis mungkin perlu kode_batch yang sama per submission.
+
+  7. PAGINATION BELUM DITERAPKAN
+     Semua query menggunakan ->get() tanpa pagination.
+     Untuk production dengan data besar, perlu ->paginate().
+  
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              9. CARA MENJALANKAN SISTEM                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Terminal 1 — Laravel:
+    cd laravel
+    php artisan migrate:fresh --seed
+    php artisan serve --port=8000
+
+  Terminal 2 — FastAPI (opsional, untuk optimasi):
+    cd or-microservice
+    pip install -r requirements.txt
+    uvicorn app.main:app --port 8001
+
+  Terminal 3 — ML Training (one-time):
+    cd ml-environment
+    python notebook_urgency_training.py
+
+  Akses: http://localhost:8000
+
+================================================================================
+  FILE STRUCTURE
+================================================================================
+
+  logitik-bencana/
+  ├── laravel/                          # Monolith Laravel 11
+  │   ├── app/
+  │   │   ├── Http/
+  │   │   │   ├── Controllers/
+  │   │   │   │   ├── AuthController.php
+  │   │   │   │   ├── AdminPusatController.php
+  │   │   │   │   ├── AdminDaerahController.php
+  │   │   │   │   ├── SarController.php
+  │   │   │   │   ├── KoordinatorController.php
+  │   │   │   │   └── PublicController.php
+  │   │   │   └── Middleware/
+  │   │   │       └── RoleBasedAccess.php
+  │   │   ├── Models/          (10 model Eloquent)
+  │   │   └── Services/
+  │   │       ├── OptimizationService.php
+  │   │       └── BurnRateService.php
+  │   ├── database/
+  │   │   ├── migrations/      (11 migrasi)
+  │   │   └── seeders/
+  │   │       └── DatabaseSeeder.php
+  │   ├── resources/views/
+  │   │   ├── layouts/app.blade.php
+  │   │   ├── auth/login.blade.php
+  │   │   ├── public/map.blade.php
+  │   │   ├── admin-pusat/     (dashboard, stok, armada, pusat-distribusi, master-bantuan)
+  │   │   ├── admin-daerah/    (dashboard, demand)
+  │   │   ├── sar/             (dashboard)
+  │   │   └── koordinator/     (dashboard, review, manifest)
+  │   └── routes/web.php       (33 routes)
+  │
+  ├── or-microservice/                  # FastAPI Microservice
+  │   ├── app/
+  │   │   ├── main.py
+  │   │   ├── routers/optimization.py
+  │   │   └── services/
+  │   │       ├── urgency_predictor.py
+  │   │       └── urgency_predictor.pkl
+  │   └── requirements.txt
+  │
+  └── ml-environment/                   # ML Training Pipeline
+      ├── notebook_urgency_training.py
+      └── synthetic_desa_logistics.csv
+
+================================================================================
+  END OF REPORT
+================================================================================
