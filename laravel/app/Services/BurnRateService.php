@@ -35,22 +35,33 @@ class BurnRateService
      * @param  array  $stokPerKategori  ['Medis' => qty, 'Air' => qty, ...]
      * @return float  Skor urgensi 0.00 - 10.00
      */
-    public function calculateScore(int $korbanSelamat, array $stokPerKategori): float
+    public function calculateScore(Desa $desa, array $stokPerKategori): float
     {
-        if ($korbanSelamat <= 0) {
+        // Jika tidak ada masalah sama sekali dan desa aman, urgency 0
+        if ($desa->status_aman && $desa->korban_selamat == 0 && $desa->jumlah_orang_sakit == 0 && $desa->persentase_infrastruktur_rusak == 0) {
             return 0.00;
         }
 
         $totalScore = 0.00;
+        
+        // Base severity dari metrik desa
+        $baseSeverity = ($desa->korban_selamat * 0.05) 
+                      + ($desa->jumlah_orang_sakit * 0.1) 
+                      + ($desa->persentase_infrastruktur_rusak * 0.05);
 
         foreach (self::CATEGORY_WEIGHTS as $kategori => $weight) {
             $kuantitas = $stokPerKategori[$kategori] ?? 0;
-            $ratio = $korbanSelamat / ($kuantitas + self::EPSILON);
-            $totalScore += $weight * $ratio;
+            // Jika stok 0, pembaginya 1 agar tidak meledak ke jutaan
+            $ratio = $baseSeverity / max(1, $kuantitas);
+            $totalScore += ($weight / 100.0) * $ratio;
         }
 
-        // Normalize from 0-100 range down to 0-10 to match ML UrgencyPredictor scale
-        return min(10.00, round($totalScore / 10.0, 2));
+        // Tambahan bobot jika desa terisolasi
+        if ($desa->status_isolasi) {
+            $totalScore += 2.0;
+        }
+
+        return min(10.00, round($totalScore, 2));
     }
 
     /**
@@ -76,7 +87,7 @@ class BurnRateService
             $stokPerKategori[$kategori] = $totalTersedia;
         }
 
-        $score = $this->calculateScore($desa->korban_selamat, $stokPerKategori);
+        $score = $this->calculateScore($desa, $stokPerKategori);
 
         // Update semua demand aktif (Draft/Queued) dengan skor baru
         DemandKebutuhan::where('id_desa', $idDesa)

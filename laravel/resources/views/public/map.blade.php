@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Peta Bencana Publik')
+@section('title', 'Public Disaster Map')
 
 @push('styles')
 <style>
@@ -144,9 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         color = '#0dcaf0'; // Info / Depot
                         radius = 8;
                     } else if (feature.properties.type === 'desa') {
-                        if (!feature.properties.status_aman || feature.properties.urgency_score > 0) {
+                        if (!feature.properties.status_aman) {
                             color = '#dc3545'; // Danger / Terdampak
-                            className = feature.properties.urgency_score > 50 ? 'pulse-marker' : '';
+                            className = feature.properties.urgency_score > 5 ? 'pulse-marker' : '';
                         }
                     }
 

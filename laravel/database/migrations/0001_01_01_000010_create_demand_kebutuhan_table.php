@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedInteger('kuantitas');
             $table->decimal('urgency_score', 6, 4)->nullable();
             $table->decimal('target_deadline_jam', 6, 2)->nullable();
-            $table->enum('status', ['Draft', 'Queued', 'Manifested', 'Fulfilled'])->default('Draft');
+            $table->enum('status', ['Draft', 'Queued', 'Manifested', 'Delivered', 'Fulfilled'])->default('Draft');
             $table->timestamps();
 
             $table->index(['id_desa', 'status']);

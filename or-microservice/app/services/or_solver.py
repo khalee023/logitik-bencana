@@ -190,9 +190,10 @@ def execute_cvrptw_solver(payload: Dict[str, Any]) -> Dict[str, Any]:
         routing_index = manager.NodeToIndex(location_idx)
         urgency = nodes[node_idx]["urgency_score"]
 
-        # Penalti drop: semakin tinggi urgensi, semakin mahal untuk diabaikan
-        # Skala: urgency 100 → penalti 100000, urgency 0 → penalti 1000
-        drop_penalty = int(1000 + urgency * 990)
+        # Skala: urgency 100 → penalti tinggi
+        # Penalti harus jauh lebih besar dari biaya jarak maksimal agar solver tidak sekadar
+        # menjatuhkan node untuk meminimalkan fungsi tujuan.
+        drop_penalty = int(10_000_000 + urgency * 1_000_000)
         routing.AddDisjunction([routing_index], drop_penalty)
 
     # === SOLVER PARAMETERS ===

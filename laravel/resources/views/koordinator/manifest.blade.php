@@ -1,46 +1,39 @@
 @extends('layouts.app')
-@section('title', 'Riwayat Manifest')
-@section('page-title', 'Riwayat Manifest Pengiriman')
+@section('title', 'Manifest History')
+@section('page-title', 'Shipping Manifest History')
 @section('content')
 
-@if(session('success'))
-<div style="background: rgba(25, 135, 84, 0.2); border-left: 4px solid var(--color-success); padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: var(--radius-sm); color: var(--color-text);">
-    {{ session('success') }}
-</div>
-@endif
-@if(session('error'))
-<div style="background: rgba(220, 53, 69, 0.2); border-left: 4px solid var(--color-danger); padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: var(--radius-sm); color: var(--color-text);">
-    {{ session('error') }}
-</div>
-@endif
-
-<div class="glass-panel" style="padding: 1.5rem;">
+<div class="glass-panel">
+    <div class="section-header">
+        <h3><i class="bi bi-file-earmark-text"></i> All Manifests</h3>
+        <span class="section-count">{{ $manifests instanceof \Illuminate\Pagination\LengthAwarePaginator ? $manifests->total() : count($manifests) }} records</span>
+    </div>
     <div class="table-responsive">
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Kode Manifest (UUID)</th>
-                    <th>Pusat Distribusi</th>
-                    <th>Plat Armada</th>
-                    <th>Waktu Berangkat</th>
-                    <th>Waktu Tiba</th>
+                    <th>Manifest Code</th>
+                    <th>Distribution Center</th>
+                    <th>Fleet Plate</th>
+                    <th>Departed At</th>
+                    <th>Arrived At</th>
                     <th>Status</th>
-                    <th>Aksi</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($manifests as $m)
                 <tr>
-                    <td><code>{{ $m->kode_manifest }}</code></td>
-                    <td>{{ $m->pusatDistribusi->nama }}</td>
-                    <td>{{ $m->armada->plat_nomor }}</td>
-                    <td>{{ $m->waktu_berangkat }}</td>
-                    <td>{{ $m->waktu_tiba ?? '—' }}</td>
+                    <td><code class="text-mono">{{ $m->kode_manifest }}</code></td>
+                    <td><strong>{{ $m->pusatDistribusi->nama }}</strong></td>
+                    <td><code>{{ $m->armada->plat_nomor }}</code></td>
+                    <td class="text-muted" style="font-size: 0.8rem;">{{ $m->waktu_berangkat }}</td>
+                    <td class="text-muted" style="font-size: 0.8rem;">{{ $m->waktu_tiba ?? '—' }}</td>
                     <td>
                         @if($m->status === 'In-Transit')
-                            <span class="badge badge-warning">In-Transit</span>
+                            <span class="badge badge-transit"><span class="badge-dot"></span> In-Transit</span>
                         @elseif($m->status === 'Delivered')
-                            <span class="badge badge-success">Delivered</span>
+                            <span class="badge badge-delivered"><span class="badge-dot"></span> Delivered</span>
                         @else
                             <span class="badge badge-info">{{ $m->status }}</span>
                         @endif
@@ -48,10 +41,10 @@
                     <td>
                         @if($m->status === 'In-Transit')
                             <form action="{{ route('koordinator.manifest.complete', $m) }}" method="POST" style="display: inline;"
-                                  onsubmit="return confirm('Tandai manifest ini sebagai selesai?')">
+                                  onsubmit="return confirm('Mark this manifest as delivered?')">
                                 @csrf
-                                <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.75rem;">
-                                    <i class="bi bi-check-circle"></i> Selesai
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-check-circle"></i> Complete
                                 </button>
                             </form>
                         @else
@@ -60,10 +53,21 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="text-center text-muted">Belum ada manifest.</td></tr>
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="bi bi-file-earmark-text"></i></div>
+                            <div class="empty-state-text">No manifests yet. Run optimization to generate shipping manifests.</div>
+                        </div>
+                    </td>
+                </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
+
+    @if($manifests instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <div class="pagination-wrapper">{{ $manifests->links() }}</div>
+    @endif
 </div>
 @endsection

@@ -26,7 +26,7 @@ class RoleBasedAccess
 
         // Validasi peran
         if (!empty($roles) && !in_array($request->user()->role, $roles)) {
-            abort(403, 'Akses ditolak. Peran Anda tidak memiliki otorisasi untuk mengakses halaman ini.');
+            abort(403, 'Access denied. Your role is not authorized to access this page.');
         }
 
         // Sliding window session regeneration (15 menit)

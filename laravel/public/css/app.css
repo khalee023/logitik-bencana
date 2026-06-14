@@ -688,6 +688,13 @@ select.form-control {
 .badge-manifested { background: rgba(59, 130, 246, 0.15); color: var(--color-status-manifested); }
 .badge-fulfilled { background: rgba(16, 185, 129, 0.15); color: var(--color-status-fulfilled); }
 
+/* Semantic badge aliases (used in Blade views) */
+.badge-success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.badge-danger { background: rgba(255, 51, 102, 0.15); color: #ff3366; }
+.badge-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.badge-info { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+.badge-primary { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
 /* Dot indicator in badge */
 .badge-dot {
     width: 6px;
@@ -701,6 +708,473 @@ select.form-control {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
 }
+
+/* === Glass Panel (Universal Container) === */
+.glass-panel {
+    background: var(--color-bg-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-base);
+}
+
+.glass-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--gradient-card-shine);
+    pointer-events: none;
+}
+
+.glass-panel:hover {
+    border-color: var(--color-border-hover);
+}
+
+/* === Stats Grid === */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
+.text-info { color: #06b6d4; }
+.text-primary { color: #3b82f6; }
+
+/* === Section Header === */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.section-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.section-header .section-count {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    background: var(--color-bg-tertiary);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+}
+
+/* === Form Row (Inline form groups) === */
+.form-row {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 160px;
+    margin-bottom: 0;
+}
+
+.form-row .form-group.fixed-width {
+    flex: 0 0 auto;
+}
+
+.form-row label,
+.form-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xs);
+}
+
+/* === Table Responsive === */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* === Empty State === */
+.empty-state {
+    text-align: center;
+    padding: var(--space-3xl) var(--space-xl);
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: var(--space-md);
+    opacity: 0.3;
+}
+
+.empty-state-text {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+/* === Urgency Indicator (Inline) === */
+.urgency-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-weight: 700;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.urgency-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.urgency-dot.low { background: var(--color-urgency-low); box-shadow: 0 0 6px var(--color-urgency-low); }
+.urgency-dot.medium { background: var(--color-urgency-medium); box-shadow: 0 0 6px var(--color-urgency-medium); }
+.urgency-dot.high { background: var(--color-urgency-high); box-shadow: 0 0 6px var(--color-urgency-high); }
+.urgency-dot.critical { background: var(--color-urgency-critical); box-shadow: 0 0 6px var(--color-urgency-critical); }
+
+/* === Optimization Hero (CTA Section) === */
+.optimization-hero {
+    text-align: center;
+    padding: var(--space-3xl) var(--space-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.optimization-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.optimization-hero h2 {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-md);
+    color: var(--color-text-primary);
+    position: relative;
+    z-index: 1;
+}
+
+.optimization-hero p {
+    max-width: 600px;
+    margin: 0 auto var(--space-xl);
+    position: relative;
+    z-index: 1;
+}
+
+/* === Review Map Container === */
+.review-map {
+    width: 100%;
+    height: 400px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    margin-bottom: var(--space-xl);
+    overflow: hidden;
+}
+
+/* === Utilization Bar === */
+.utilization-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: var(--space-xs);
+}
+
+.utilization-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-slow);
+    background: var(--gradient-accent);
+}
+
+.utilization-bar-fill.high {
+    background: var(--gradient-danger);
+}
+
+/* === Route Card === */
+.route-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    transition: all var(--transition-fast);
+}
+
+.route-card:hover {
+    border-color: var(--color-border-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.route-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.route-card-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.route-metric {
+    text-align: center;
+}
+
+.route-metric-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+.route-metric-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+}
+
+/* === Visit Sequence (Route stops) === */
+.visit-sequence {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+}
+
+.visit-sequence::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: var(--color-border);
+}
+
+.visit-stop {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-sm) 0;
+    font-size: 0.85rem;
+    position: relative;
+}
+
+.visit-stop-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--color-accent-primary);
+    background: var(--color-bg-primary);
+    flex-shrink: 0;
+    margin-top: 5px;
+    position: relative;
+    z-index: 1;
+}
+
+.visit-stop-dot.depot {
+    background: var(--color-accent-primary);
+    box-shadow: 0 0 8px var(--color-accent-primary);
+}
+
+.visit-stop-content {
+    flex: 1;
+}
+
+.visit-stop-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.visit-stop-meta {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+/* === Pagination === */
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-xl);
+}
+
+.pagination-wrapper nav {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.pagination-wrapper .page-link,
+.pagination-wrapper nav a,
+.pagination-wrapper nav span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-glass);
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.pagination-wrapper nav a:hover {
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+    background: rgba(0, 212, 255, 0.08);
+}
+
+.pagination-wrapper nav span[aria-current="page"] span,
+.pagination-wrapper .page-item.active .page-link {
+    background: var(--gradient-accent);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 700;
+}
+
+.pagination-wrapper nav span.disabled,
+.pagination-wrapper .page-item.disabled .page-link {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Laravel default pagination override */
+.pagination-wrapper nav > div {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+}
+
+.pagination-wrapper nav > div > div:first-child {
+    display: none; /* hide "Showing x to y of z" on mobile */
+}
+
+.pagination-wrapper nav > div > div:last-child nav {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+/* === Summary Stats Row === */
+.summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.summary-item {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-md) var(--space-lg);
+    text-align: center;
+}
+
+.summary-item-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    line-height: 1.2;
+}
+
+.summary-item-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin-top: var(--space-xs);
+}
+
+/* === Approve/Reject Action Bar === */
+.action-bar {
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    align-items: center;
+}
+
+.action-bar-status {
+    flex: 1;
+}
+
+.action-bar-buttons {
+    display: flex;
+    gap: var(--space-sm);
+    flex-shrink: 0;
+}
+
+/* === Stagger animation for grid children === */
+.stats-grid > *:nth-child(1) { animation: slide-up 0.5s ease forwards; animation-delay: 0ms; }
+.stats-grid > *:nth-child(2) { animation: slide-up 0.5s ease forwards; animation-delay: 80ms; }
+.stats-grid > *:nth-child(3) { animation: slide-up 0.5s ease forwards; animation-delay: 160ms; }
+.stats-grid > *:nth-child(4) { animation: slide-up 0.5s ease forwards; animation-delay: 240ms; }
+.stats-grid > *:nth-child(5) { animation: slide-up 0.5s ease forwards; animation-delay: 320ms; }
+.stats-grid > * { opacity: 0; }
+
+/* === Btn warning variant === */
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #0a0e1a;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+}
+
+.btn-warning:hover {
+    box-shadow: 0 6px 25px rgba(245, 158, 11, 0.35);
+    transform: translateY(-1px);
+}
+
+/* === Stat card border accent variants === */
+.stat-card.accent-warning { border-left: 3px solid var(--color-urgency-medium); }
+.stat-card.accent-primary { border-left: 3px solid var(--color-accent-primary); }
+.stat-card.accent-success { border-left: 3px solid var(--color-status-available); }
+.stat-card.accent-danger { border-left: 3px solid var(--color-urgency-critical); }
+.stat-card.accent-info { border-left: 3px solid var(--color-status-delivered); }
 
 /* === Map Container === */
 .map-container {

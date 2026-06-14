@@ -1,71 +1,73 @@
 @extends('layouts.app')
-@section('title', 'Master Bantuan')
-@section('page-title', 'Kelola Master Bantuan')
+@section('title', 'Relief Item Catalog')
+@section('page-title', 'Manage Relief Item Catalog')
 @section('content')
 
-<div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-    <h3 style="margin-top:0;"><i class="bi bi-box"></i> Tambah Item Bantuan</h3>
-    
-    @if(session('success'))
-        <div style="background: rgba(25, 135, 84, 0.2); border-left: 4px solid var(--color-success); padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: var(--radius-sm); color: var(--color-text);">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div style="background: rgba(220, 53, 69, 0.2); border-left: 4px solid var(--color-danger); padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: var(--radius-sm); color: var(--color-text);">
-            <ul style="margin: 0; padding-left: 1.5rem;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-        </div>
-    @endif
+<div class="glass-panel mb-xl">
+    <div class="section-header">
+        <h3><i class="bi bi-box"></i> Register New Relief Item</h3>
+    </div>
 
     <form action="{{ route('admin-pusat.master-bantuan.store') }}" method="POST">
         @csrf
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
-            <div style="flex: 1; min-width: 200px;">
-                <label>Nama Barang</label>
-                <input type="text" name="nama" class="form-control" required placeholder="Paket P3K Darurat" value="{{ old('nama') }}" style="width: 100%; padding: 0.5rem; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-glass-border);">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" name="nama" class="form-control" required placeholder="Emergency First Aid Kit" value="{{ old('nama') }}">
             </div>
-            <div style="width: 150px;">
-                <label>Kategori</label>
-                <select name="kategori" class="form-control" required style="width: 100%; padding: 0.5rem; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-glass-border);">
-                    <option value="Medis">Medis</option>
-                    <option value="Air">Air</option>
-                    <option value="Ransum">Ransum</option>
-                    <option value="Tenda">Tenda</option>
+            <div class="form-group" style="max-width: 160px;">
+                <label>Category</label>
+                <select name="kategori" class="form-control" required>
+                    <option value="Medis">Medical</option>
+                    <option value="Air">Water</option>
+                    <option value="Ransum">Rations</option>
+                    <option value="Tenda">Shelter</option>
                 </select>
             </div>
-            <div style="width: 120px;">
-                <label>Berat (kg)</label>
-                <input type="number" name="berat_kg" class="form-control" min="0.01" step="0.01" required placeholder="5.0" value="{{ old('berat_kg') }}" style="width: 100%; padding: 0.5rem; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-glass-border);">
+            <div class="form-group" style="max-width: 130px;">
+                <label>Weight (kg)</label>
+                <input type="number" name="berat_kg" class="form-control" min="0.01" step="0.01" required placeholder="5.0" value="{{ old('berat_kg') }}">
             </div>
-            <div style="width: 130px;">
+            <div class="form-group" style="max-width: 130px;">
                 <label>Volume (m³)</label>
-                <input type="number" name="volume_m3" class="form-control" min="0.0001" step="0.0001" required placeholder="0.05" value="{{ old('volume_m3') }}" style="width: 100%; padding: 0.5rem; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-glass-border);">
+                <input type="number" name="volume_m3" class="form-control" min="0.0001" step="0.0001" required placeholder="0.05" value="{{ old('volume_m3') }}">
             </div>
-            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.5rem;"><i class="bi bi-plus-circle"></i> Tambah</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add Item</button>
         </div>
     </form>
 </div>
 
-<div class="glass-panel" style="padding: 1.5rem;">
-    <h3 style="margin-top:0;">Katalog Bantuan (SKU)</h3>
+<div class="glass-panel">
+    <div class="section-header">
+        <h3>Relief Item Catalog (SKU)</h3>
+        <span class="section-count">{{ count($data) }} items</span>
+    </div>
     <div class="table-responsive">
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>ID</th><th>Nama Barang</th><th>Kategori</th><th>Berat (kg)</th><th>Volume (m3)</th>
+                    <th>ID</th><th>Item Name</th><th>Category</th><th>Weight (kg)</th><th>Volume (m³)</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($data as $d)
+                @forelse($data as $d)
                 <tr>
-                    <td>{{ $d->id }}</td>
-                    <td>{{ $d->nama }}</td>
+                    <td class="text-mono">{{ $d->id }}</td>
+                    <td><strong>{{ $d->nama }}</strong></td>
                     <td><span class="badge badge-info">{{ $d->kategori }}</span></td>
-                    <td>{{ $d->berat_kg }}</td>
-                    <td>{{ $d->volume_m3 }}</td>
+                    <td class="text-mono">{{ $d->berat_kg }}</td>
+                    <td class="text-mono">{{ $d->volume_m3 }}</td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="bi bi-box"></i></div>
+                            <div class="empty-state-text">No relief items in catalog. Add one above.</div>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

@@ -106,7 +106,7 @@ class PublicController extends Controller
                     'id_manifest' => $manifest->id,
                     'id_armada' => $manifest->id_armada,
                     'id_pusat' => $manifest->id_pusat,
-                    'route_json' => json_decode($manifest->route_json, true)
+                    'route_json' => is_string($manifest->route_json) ? json_decode($manifest->route_json, true) : $manifest->route_json
                 ];
             });
 

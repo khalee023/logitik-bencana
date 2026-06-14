@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Disaster Logistics Command Center — Sistem Komando Logistik Penanggulangan Bencana">
+    <meta name="description" content="Disaster Logistics Command Center — Integrated ERP for disaster relief distribution management">
     <title>@yield('title', 'Command Center') — DLCC</title>
 
     <!-- Leaflet.js CSS -->
@@ -42,7 +42,7 @@
 
                 @if($role === 'Pusat')
                     <div class="sidebar-section-label">Central Admin</div>
-                    <a href="{{ route('admin-pusat.dashboard') }}" class="sidebar-link {{ request()->is('admin-pusat*') ? 'active' : '' }}" id="nav-pusat-dashboard">
+                    <a href="{{ route('admin-pusat.dashboard') }}" class="sidebar-link {{ request()->is('admin-pusat') ? 'active' : '' }}" id="nav-pusat-dashboard">
                         <span class="sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
                         <span class="sidebar-link-text">Dashboard</span>
                     </a>
@@ -52,7 +52,7 @@
                     </a>
                     <a href="{{ route('admin-pusat.master-bantuan.index') }}" class="sidebar-link {{ request()->is('admin-pusat/master-bantuan*') ? 'active' : '' }}" id="nav-master-bantuan">
                         <span class="sidebar-link-icon"><i class="bi bi-box-seam"></i></span>
-                        <span class="sidebar-link-text">Master Relief Items</span>
+                        <span class="sidebar-link-text">Relief Item Catalog</span>
                     </a>
                     <a href="{{ route('admin-pusat.stok.index') }}" class="sidebar-link {{ request()->is('admin-pusat/stok*') ? 'active' : '' }}" id="nav-stok">
                         <span class="sidebar-link-icon"><i class="bi bi-stack"></i></span>
@@ -62,17 +62,21 @@
                         <span class="sidebar-link-icon"><i class="bi bi-truck"></i></span>
                         <span class="sidebar-link-text">Fleet Management</span>
                     </a>
+                    <a href="{{ route('admin-pusat.rute.index') }}" class="sidebar-link {{ request()->is('admin-pusat/rute*') ? 'active' : '' }}" id="nav-rute">
+                        <span class="sidebar-link-icon"><i class="bi bi-signpost-2"></i></span>
+                        <span class="sidebar-link-text">Road Network</span>
+                    </a>
                 @endif
 
                 @if($role === 'Daerah')
                     <div class="sidebar-section-label">Regional Admin</div>
-                    <a href="{{ route('admin-daerah.dashboard') }}" class="sidebar-link {{ request()->is('admin-daerah*') ? 'active' : '' }}" id="nav-daerah-dashboard">
+                    <a href="{{ route('admin-daerah.dashboard') }}" class="sidebar-link {{ request()->is('admin-daerah') ? 'active' : '' }}" id="nav-daerah-dashboard">
                         <span class="sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
                         <span class="sidebar-link-text">Dashboard</span>
                     </a>
                     <a href="{{ route('admin-daerah.demand.index') }}" class="sidebar-link {{ request()->is('admin-daerah/demand*') ? 'active' : '' }}" id="nav-demand">
                         <span class="sidebar-link-icon"><i class="bi bi-clipboard-data"></i></span>
-                        <span class="sidebar-link-text">Input Demands</span>
+                        <span class="sidebar-link-text">Demand Requests</span>
                     </a>
                 @endif
 
@@ -80,13 +84,13 @@
                     <div class="sidebar-section-label">Search & Rescue</div>
                     <a href="{{ route('sar.dashboard') }}" class="sidebar-link {{ request()->is('sar*') ? 'active' : '' }}" id="nav-sar-dashboard">
                         <span class="sidebar-link-icon"><i class="bi bi-shield-check"></i></span>
-                        <span class="sidebar-link-text">Field Ops (Routes)</span>
+                        <span class="sidebar-link-text">Field Operations</span>
                     </a>
                 @endif
 
                 @if($role === 'Koor')
                     <div class="sidebar-section-label">Coordinator</div>
-                    <a href="{{ route('koordinator.dashboard') }}" class="sidebar-link {{ request()->is('koordinator*') ? 'active' : '' }}" id="nav-koordinator-dashboard">
+                    <a href="{{ route('koordinator.dashboard') }}" class="sidebar-link {{ request()->is('koordinator') ? 'active' : '' }}" id="nav-koordinator-dashboard">
                         <span class="sidebar-link-icon"><i class="bi bi-bullseye"></i></span>
                         <span class="sidebar-link-text">Command Center</span>
                     </a>
@@ -174,7 +178,7 @@
             const now = new Date();
             const el = document.getElementById('live-clock');
             if (el) {
-                el.textContent = now.toLocaleTimeString('id-ID', {
+                el.textContent = now.toLocaleTimeString('en-US', {
                     hour: '2-digit', minute: '2-digit', second: '2-digit'
                 });
             }

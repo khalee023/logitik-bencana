@@ -38,11 +38,11 @@ class SarController extends Controller
         $rute->status_akses_terbuka = !$rute->status_akses_terbuka;
         $rute->save();
 
-        $statusText = $rute->status_akses_terbuka ? 'TERBUKA' : 'TERBLOKIR';
+        $statusText = $rute->status_akses_terbuka ? 'OPEN' : 'BLOCKED';
 
         return response()->json([
             'status' => 'SUCCESS',
-            'message' => "Rute ID {$rute->id} berhasil diubah menjadi {$statusText}.",
+            'message' => "Route ID {$rute->id} access changed to {$statusText}.",
             'rute' => [
                 'id' => $rute->id,
                 'id_titik_asal' => $rute->id_titik_asal,
@@ -78,14 +78,65 @@ class SarController extends Controller
 
         $desa->save();
 
+        // Recalculate urgency score via ML predictor
+        try {
+            $optService = new \App\Services\OptimizationService();
+            $optService->predictUrgency();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('ML Urgency update failed on status update: ' . $e->getMessage());
+        }
+
         return response()->json([
             'status' => 'SUCCESS',
-            'message' => "Status Desa '{$desa->nama}' berhasil diperbarui.",
+            'message' => "Village '{$desa->nama}' status updated successfully.",
             'desa' => [
                 'id' => $desa->id,
                 'nama' => $desa->nama,
                 'status_aman' => $desa->status_aman,
                 'status_isolasi' => $desa->status_isolasi,
+            ],
+        ]);
+    }
+
+    /**
+     * Update metrik desa — SAR field operations.
+     * Endpoint: POST /sar/desa/update-metrics
+     */
+    public function updateDesaMetrics(Request $request): JsonResponse
+    {
+        $request->validate([
+            'id_desa' => 'required|exists:desa,id',
+            'populasi' => 'required|integer|min:0',
+            'korban_selamat' => 'required|integer|min:0',
+            'jumlah_orang_sakit' => 'required|integer|min:0',
+            'persentase_infrastruktur_rusak' => 'required|numeric|between:0,100',
+        ]);
+
+        $desa = Desa::findOrFail($request->id_desa);
+
+        $desa->populasi = $request->populasi;
+        $desa->korban_selamat = $request->korban_selamat;
+        $desa->jumlah_orang_sakit = $request->jumlah_orang_sakit;
+        $desa->persentase_infrastruktur_rusak = $request->persentase_infrastruktur_rusak;
+        $desa->save();
+
+        // Recalculate urgency score via ML predictor
+        try {
+            $optService = new \App\Services\OptimizationService();
+            $optService->predictUrgency();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('ML Urgency update failed on metrics update: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => "Village '{$desa->nama}' metrics updated successfully.",
+            'desa' => [
+                'id' => $desa->id,
+                'populasi' => $desa->populasi,
+                'korban_selamat' => $desa->korban_selamat,
+                'jumlah_orang_sakit' => $desa->jumlah_orang_sakit,
+                'persentase_infrastruktur_rusak' => $desa->persentase_infrastruktur_rusak,
             ],
         ]);
     }

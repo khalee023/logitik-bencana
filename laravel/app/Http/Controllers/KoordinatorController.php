@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ArmadaKendaraan;
 use App\Models\DemandKebutuhan;
+use App\Models\Desa;
 use App\Models\ManifestPengiriman;
+use App\Models\PusatDistribusi;
 use App\Services\OptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +28,30 @@ class KoordinatorController extends Controller
             'manifest_transit' => ManifestPengiriman::where('status', 'In-Transit')->count(),
         ];
 
-        return view('koordinator.dashboard', compact('stats'));
+        // Queued demands preview (top urgency, limit 10)
+        $queuedDemands = DemandKebutuhan::with(['desa', 'barang'])
+            ->byStatus('Queued')
+            ->orderByDesc('urgency_score')
+            ->limit(10)
+            ->get();
+
+        return view('koordinator.dashboard', compact('stats', 'queuedDemands'));
+    }
+
+    /**
+     * Update skor urgensi secara manual melalui ML model
+     */
+    public function updateUrgency()
+    {
+        try {
+            $optService = new \App\Services\OptimizationService();
+            $optService->predictUrgency();
+            
+            return redirect()->back()->with('success', 'Urgency scores updated successfully via AI model.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Manual Urgency update failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update urgency scores: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -42,16 +68,17 @@ class KoordinatorController extends Controller
             $request->session()->put('simulation_result', $result);
 
             return redirect()->route('koordinator.review')
-                ->with('success', 'Simulasi optimasi berhasil. Silakan review hasil rute.');
+                ->with('success', 'Optimization simulation completed successfully. Please review the proposed routes.');
         } catch (\Exception $e) {
             Log::error('Optimization trigger failed: ' . $e->getMessage());
             return redirect()->back()
-                ->with('error', 'Gagal menjalankan optimasi: ' . $e->getMessage());
+                ->with('error', 'Failed to run optimization: ' . $e->getMessage());
         }
     }
 
     /**
      * Halaman review simulasi — Human-in-the-Loop.
+     * Enriched with map data for Leaflet rendering.
      */
     public function reviewSimulation(Request $request)
     {
@@ -59,10 +86,55 @@ class KoordinatorController extends Controller
 
         if (!$result) {
             return redirect()->route('koordinator.dashboard')
-                ->with('error', 'Tidak ada hasil simulasi yang tersedia untuk direview.');
+                ->with('error', 'No simulation results available for review.');
         }
 
-        return view('koordinator.review', compact('result'));
+        // Build desa name lookup for resolved village names
+        $desaIds = collect();
+        foreach ($result['routes'] as $route) {
+            foreach ($route['stops'] as $stop) {
+                if (!is_null($stop['id_desa'])) {
+                    $desaIds->push($stop['id_desa']);
+                }
+            }
+        }
+        $desaNames = Desa::whereIn('id', $desaIds->unique())
+            ->pluck('nama', 'id')
+            ->toArray();
+
+        // Build map data for Leaflet
+        $mapData = ['depots' => [], 'desa' => [], 'armadas' => []];
+
+        // Get all active depots for map markers
+        $depots = PusatDistribusi::aktif()->get();
+        foreach ($depots as $depot) {
+            $mapData['depots'][$depot->id] = [
+                'id' => $depot->id,
+                'lat' => (float) $depot->lat,
+                'lng' => (float) $depot->long_decimal,
+                'nama' => $depot->nama,
+            ];
+        }
+
+        // Map fleet ID to their depot ID
+        $routeArmadaIds = collect($result['routes'])->pluck('id_armada')->unique();
+        $armadas = ArmadaKendaraan::whereIn('id', $routeArmadaIds)->get();
+        foreach ($armadas as $armada) {
+            $mapData['armadas'][$armada->id] = $armada->id_pusat;
+        }
+
+        // Get all desa coordinates for route plotting
+        $desaList = Desa::whereIn('id', $desaIds->unique())->get();
+        foreach ($desaList as $d) {
+            $mapData['desa'][] = [
+                'id' => $d->id,
+                'lat' => (float) $d->lat,
+                'lng' => (float) $d->long_decimal,
+                'nama' => $d->nama,
+            ];
+        }
+
+        return view('koordinator.review', compact('result', 'desaNames', 'mapData'));
     }
 
     /**
@@ -74,7 +146,7 @@ class KoordinatorController extends Controller
 
         if (!$result) {
             return redirect()->route('koordinator.dashboard')
-                ->with('error', 'Tidak ada hasil simulasi yang tersedia.');
+                ->with('error', 'No simulation results available.');
         }
 
         try {
@@ -85,11 +157,11 @@ class KoordinatorController extends Controller
             $request->session()->forget('simulation_result');
 
             return redirect()->route('koordinator.dashboard')
-                ->with('success', 'State-Commit berhasil! ' . count($manifestIds) . ' manifest pengiriman diterbitkan.');
+                ->with('success', 'State-Commit successful! ' . count($manifestIds) . ' shipping manifest(s) published.');
         } catch (\Exception $e) {
             Log::error('Approval failed: ' . $e->getMessage());
             return redirect()->back()
-                ->with('error', 'Gagal menyetujui simulasi: ' . $e->getMessage());
+                ->with('error', 'Failed to approve simulation: ' . $e->getMessage());
         }
     }
 
@@ -100,7 +172,7 @@ class KoordinatorController extends Controller
     {
         $request->session()->forget('simulation_result');
         return redirect()->route('koordinator.dashboard')
-            ->with('success', 'Hasil simulasi ditolak. Anda dapat menjalankan optimasi ulang.');
+            ->with('success', 'Simulation results rejected. You may re-run optimization.');
     }
 
     /**
@@ -111,7 +183,7 @@ class KoordinatorController extends Controller
     {
         if ($manifest->status !== 'In-Transit') {
             return redirect()->back()
-                ->with('error', 'Hanya manifest berstatus In-Transit yang dapat diselesaikan.');
+                ->with('error', 'Only manifests with In-Transit status can be completed.');
         }
 
         DB::beginTransaction();
@@ -132,7 +204,7 @@ class KoordinatorController extends Controller
                     if (isset($stop['id_desa']) && $stop['id_desa'] !== null) {
                         DemandKebutuhan::where('id_desa', $stop['id_desa'])
                             ->byStatus('Manifested')
-                            ->update(['status' => 'Fulfilled']);
+                            ->update(['status' => 'Delivered']);
                     }
                 }
             }
@@ -152,24 +224,24 @@ class KoordinatorController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('success', "Manifest #{$manifest->id} berhasil diselesaikan. Armada dikembalikan ke pool.");
+                ->with('success', "Manifest #{$manifest->id} completed successfully. Vehicle returned to pool.");
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Complete manifest failed: ' . $e->getMessage());
             return redirect()->back()
-                ->with('error', 'Gagal menyelesaikan manifest: ' . $e->getMessage());
+                ->with('error', 'Failed to complete manifest: ' . $e->getMessage());
         }
     }
 
     /**
-     * Riwayat manifest pengiriman.
+     * Riwayat manifest pengiriman — with pagination.
      */
     public function manifestHistory()
     {
         $manifests = ManifestPengiriman::with(['pusatDistribusi', 'armada'])
             ->latest()
-            ->get();
+            ->paginate(15);
 
         return view('koordinator.manifest', compact('manifests'));
     }

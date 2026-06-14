@@ -49,7 +49,7 @@ class AdminPusatController extends Controller
         ]);
 
         PusatDistribusi::create($request->only(['id_kabupaten', 'nama', 'lat', 'long_decimal']));
-        return redirect()->back()->with('success', 'Pusat distribusi berhasil ditambahkan.');
+        return redirect()->back()->with('success', 'Distribution center added successfully.');
     }
 
     public function pusatDistribusiUpdate(Request $request, PusatDistribusi $pusat)
@@ -62,7 +62,7 @@ class AdminPusatController extends Controller
         ]);
 
         $pusat->update($request->only(['nama', 'lat', 'long_decimal', 'status_aktif']));
-        return redirect()->back()->with('success', 'Pusat distribusi berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Distribution center updated successfully.');
     }
 
     // === MASTER BANTUAN CRUD ===
@@ -83,7 +83,7 @@ class AdminPusatController extends Controller
         ]);
 
         MasterBantuan::create($request->only(['nama', 'kategori', 'berat_kg', 'volume_m3']));
-        return redirect()->back()->with('success', 'Item bantuan berhasil ditambahkan.');
+        return redirect()->back()->with('success', 'Relief item added successfully.');
     }
 
     // === STOK PUSAT ===
@@ -115,7 +115,7 @@ class AdminPusatController extends Controller
             ['total_kuantitas' => $request->total_kuantitas, 'updated_at' => now()]
         );
 
-        return redirect()->back()->with('success', 'Stok berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Stock updated successfully.');
     }
 
     // === ARMADA ===
@@ -137,6 +137,37 @@ class AdminPusatController extends Controller
         ]);
 
         ArmadaKendaraan::create($request->only(['id_pusat', 'plat_nomor', 'max_berat_kg', 'max_vol_m3']));
-        return redirect()->back()->with('success', 'Kendaraan armada berhasil ditambahkan.');
+        return redirect()->back()->with('success', 'Vehicle added to fleet successfully.');
+    }
+
+    // === RUTE ===
+
+    public function ruteIndex()
+    {
+        $rutes = \App\Models\Rute::all();
+        $pusatDistribusi = PusatDistribusi::all();
+        $desa = \App\Models\Desa::all();
+        
+        return view('admin-pusat.rute', compact('rutes', 'pusatDistribusi', 'desa'));
+    }
+
+    public function ruteStore(Request $request)
+    {
+        $request->validate([
+            'id_titik_asal' => 'required|integer',
+            'id_titik_tujuan' => 'required|integer',
+            'jarak_km' => 'required|numeric|min:0.1',
+            'status_akses_terbuka' => 'required|boolean',
+        ]);
+
+        if ($request->id_titik_asal == $request->id_titik_tujuan) {
+            return redirect()->back()->with('error', 'Origin and destination nodes cannot be the same.');
+        }
+
+        \App\Models\Rute::create($request->only([
+            'id_titik_asal', 'id_titik_tujuan', 'jarak_km', 'status_akses_terbuka'
+        ]));
+
+        return redirect()->back()->with('success', 'Route added successfully.');
     }
 }

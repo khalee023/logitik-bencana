@@ -85,6 +85,30 @@ class DatabaseSeeder extends Seeder
             'jumlah_orang_sakit' => 10, 'persentase_infrastruktur_rusak' => 5.00,
             'status_isolasi' => false, 'status_aman' => true,
         ]);
+        $desaCipanas = Desa::create([
+            'id' => 105,
+            'id_kabupaten' => $kab->id, 'nama' => 'Desa Cipanas',
+            'lat' => -6.7400, 'long_decimal' => 107.0400,
+            'populasi' => 12000, 'korban_selamat' => 11000,
+            'jumlah_orang_sakit' => 450, 'persentase_infrastruktur_rusak' => 60.00,
+            'status_isolasi' => false, 'status_aman' => false,
+        ]);
+        $desaSukaresmi = Desa::create([
+            'id' => 106,
+            'id_kabupaten' => $kab->id, 'nama' => 'Desa Sukaresmi',
+            'lat' => -6.7200, 'long_decimal' => 107.0800,
+            'populasi' => 5500, 'korban_selamat' => 5000,
+            'jumlah_orang_sakit' => 200, 'persentase_infrastruktur_rusak' => 55.00,
+            'status_isolasi' => true, 'status_aman' => false,
+        ]);
+        $desaMande = Desa::create([
+            'id' => 107,
+            'id_kabupaten' => $kab->id, 'nama' => 'Desa Mande',
+            'lat' => -6.7700, 'long_decimal' => 107.1500,
+            'populasi' => 8000, 'korban_selamat' => 7800,
+            'jumlah_orang_sakit' => 50, 'persentase_infrastruktur_rusak' => 15.00,
+            'status_isolasi' => false, 'status_aman' => true,
+        ]);
 
         // 5. Rute (Adjacency List untuk Matriks Jarak)
         Rute::insert([
@@ -92,14 +116,19 @@ class DatabaseSeeder extends Seeder
             ['id_titik_asal' => $depot1->id, 'id_titik_tujuan' => $desaCilaku->id, 'jarak_km' => 5.2, 'status_akses_terbuka' => true],
             ['id_titik_asal' => $depot1->id, 'id_titik_tujuan' => $desaWarungkondang->id, 'jarak_km' => 8.5, 'status_akses_terbuka' => true],
             ['id_titik_asal' => $depot1->id, 'id_titik_tujuan' => $desaCugenang->id, 'jarak_km' => 7.1, 'status_akses_terbuka' => false], // Longsor
+            ['id_titik_asal' => $depot1->id, 'id_titik_tujuan' => $desaMande->id, 'jarak_km' => 10.5, 'status_akses_terbuka' => true],
             
             // Depot 2 ke Desa
             ['id_titik_asal' => $depot2->id, 'id_titik_tujuan' => $desaPaceta->id, 'jarak_km' => 2.5, 'status_akses_terbuka' => true],
             ['id_titik_asal' => $depot2->id, 'id_titik_tujuan' => $desaCugenang->id, 'jarak_km' => 6.0, 'status_akses_terbuka' => true],
+            ['id_titik_asal' => $depot2->id, 'id_titik_tujuan' => $desaCipanas->id, 'jarak_km' => 1.8, 'status_akses_terbuka' => true],
+            ['id_titik_asal' => $depot2->id, 'id_titik_tujuan' => $desaSukaresmi->id, 'jarak_km' => 7.2, 'status_akses_terbuka' => true],
             
             // Inter-Desa (Voronoi connectivity)
             ['id_titik_asal' => $desaCugenang->id, 'id_titik_tujuan' => $desaPaceta->id, 'jarak_km' => 4.2, 'status_akses_terbuka' => true],
             ['id_titik_asal' => $desaWarungkondang->id, 'id_titik_tujuan' => $desaCilaku->id, 'jarak_km' => 3.8, 'status_akses_terbuka' => true],
+            ['id_titik_asal' => $desaCipanas->id, 'id_titik_tujuan' => $desaSukaresmi->id, 'jarak_km' => 5.5, 'status_akses_terbuka' => true],
+            ['id_titik_asal' => $desaMande->id, 'id_titik_tujuan' => $desaCilaku->id, 'jarak_km' => 12.0, 'status_akses_terbuka' => true],
         ]);
 
         // 6. Master Bantuan (SKU)
@@ -128,10 +157,17 @@ class DatabaseSeeder extends Seeder
             ['id_pusat' => $depot2->id, 'plat_nomor' => 'F 8813 XY', 'max_berat_kg' => 2500.0, 'max_vol_m3' => 12.0, 'status' => 'Available'],
         ]);
 
-        // 9. Demand Kebutuhan Dummy (Draft & Queued) — with target_deadline_jam = 72 / (urgency + 1)
-        DemandKebutuhan::create(['id_desa' => $desaCugenang->id, 'id_barang' => $mMedis->id, 'kuantitas' => 50, 'urgency_score' => 95.5, 'target_deadline_jam' => round(72 / (95.5 + 1), 2), 'status' => 'Queued']);
-        DemandKebutuhan::create(['id_desa' => $desaCugenang->id, 'id_barang' => $mAir->id, 'kuantitas' => 200, 'urgency_score' => 80.0, 'target_deadline_jam' => round(72 / (80.0 + 1), 2), 'status' => 'Queued']);
-        DemandKebutuhan::create(['id_desa' => $desaPaceta->id, 'id_barang' => $mRansum->id, 'kuantitas' => 300, 'urgency_score' => 70.0, 'target_deadline_jam' => round(72 / (70.0 + 1), 2), 'status' => 'Queued']);
-        DemandKebutuhan::create(['id_desa' => $desaWarungkondang->id, 'id_barang' => $mTenda->id, 'kuantitas' => 5, 'urgency_score' => 45.0, 'target_deadline_jam' => round(72 / (45.0 + 1), 2), 'status' => 'Draft']);
+        // 9. Demand Kebutuhan Dummy (Draft & Queued)
+        DemandKebutuhan::create(['id_desa' => $desaCugenang->id, 'id_barang' => $mMedis->id, 'kuantitas' => 50, 'status' => 'Queued']);
+        DemandKebutuhan::create(['id_desa' => $desaCugenang->id, 'id_barang' => $mAir->id, 'kuantitas' => 200, 'status' => 'Queued']);
+        DemandKebutuhan::create(['id_desa' => $desaPaceta->id, 'id_barang' => $mRansum->id, 'kuantitas' => 300, 'status' => 'Queued']);
+        DemandKebutuhan::create(['id_desa' => $desaWarungkondang->id, 'id_barang' => $mTenda->id, 'kuantitas' => 5, 'status' => 'Draft']);
+        
+        // Tambahan demand
+        DemandKebutuhan::create(['id_desa' => $desaCipanas->id, 'id_barang' => $mMedis->id, 'kuantitas' => 100, 'status' => 'Queued']);
+        DemandKebutuhan::create(['id_desa' => $desaCipanas->id, 'id_barang' => $mAir->id, 'kuantitas' => 300, 'status' => 'Queued']);
+        DemandKebutuhan::create(['id_desa' => $desaSukaresmi->id, 'id_barang' => $mRansum->id, 'kuantitas' => 400, 'status' => 'Queued']);
+        DemandKebutuhan::create(['id_desa' => $desaMande->id, 'id_barang' => $mTenda->id, 'kuantitas' => 10, 'status' => 'Queued']);
+        DemandKebutuhan::create(['id_desa' => $desaMande->id, 'id_barang' => $mRansum->id, 'kuantitas' => 200, 'status' => 'Queued']);
     }
 }

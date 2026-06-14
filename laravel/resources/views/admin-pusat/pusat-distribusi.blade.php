@@ -1,70 +1,78 @@
 @extends('layouts.app')
-@section('title', 'Pusat Distribusi')
-@section('page-title', 'Kelola Pusat Distribusi')
+@section('title', 'Distribution Centers')
+@section('page-title', 'Manage Distribution Centers')
 @section('content')
 
-<div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-    <h3 style="margin-top:0;"><i class="bi bi-building"></i> Tambah Pusat Distribusi</h3>
-    
-    @if(session('success'))
-        <div style="background: rgba(25, 135, 84, 0.2); border-left: 4px solid var(--color-success); padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: var(--radius-sm); color: var(--color-text);">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div style="background: rgba(220, 53, 69, 0.2); border-left: 4px solid var(--color-danger); padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: var(--radius-sm); color: var(--color-text);">
-            <ul style="margin: 0; padding-left: 1.5rem;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-        </div>
-    @endif
+<div class="glass-panel mb-xl">
+    <div class="section-header">
+        <h3><i class="bi bi-building"></i> Register New Center</h3>
+    </div>
 
     <form action="{{ route('admin-pusat.pusat-distribusi.store') }}" method="POST">
         @csrf
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
-            <div style="flex: 1; min-width: 180px;">
-                <label>Kabupaten</label>
-                <select name="id_kabupaten" class="form-control" required style="width: 100%; padding: 0.5rem; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-glass-border);">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Region</label>
+                <select name="id_kabupaten" class="form-control" required>
                     @foreach($kabupaten as $kab)
                         <option value="{{ $kab->id }}">{{ $kab->nama }}</option>
                     @endforeach
                 </select>
             </div>
-            <div style="flex: 1; min-width: 180px;">
-                <label>Nama Pusat</label>
-                <input type="text" name="nama" class="form-control" required placeholder="Gudang Logistik..." value="{{ old('nama') }}" style="width: 100%; padding: 0.5rem; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-glass-border);">
+            <div class="form-group">
+                <label>Center Name</label>
+                <input type="text" name="nama" class="form-control" required placeholder="Logistics Warehouse..." value="{{ old('nama') }}">
             </div>
-            <div style="width: 140px;">
+            <div class="form-group" style="max-width: 140px;">
                 <label>Latitude</label>
-                <input type="number" name="lat" class="form-control" step="0.00000001" min="-90" max="90" required placeholder="-6.7321" value="{{ old('lat') }}" style="width: 100%; padding: 0.5rem; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-glass-border);">
+                <input type="number" name="lat" class="form-control" step="0.00000001" min="-90" max="90" required placeholder="-6.7321" value="{{ old('lat') }}">
             </div>
-            <div style="width: 140px;">
+            <div class="form-group" style="max-width: 140px;">
                 <label>Longitude</label>
-                <input type="number" name="long_decimal" class="form-control" step="0.00000001" min="-180" max="180" required placeholder="107.0834" value="{{ old('long_decimal') }}" style="width: 100%; padding: 0.5rem; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-glass-border);">
+                <input type="number" name="long_decimal" class="form-control" step="0.00000001" min="-180" max="180" required placeholder="107.0834" value="{{ old('long_decimal') }}">
             </div>
-            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.5rem;"><i class="bi bi-plus-circle"></i> Tambah</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add Center</button>
         </div>
     </form>
 </div>
 
-<div class="glass-panel" style="padding: 1.5rem;">
-    <h3 style="margin-top:0;">Daftar Pusat Distribusi</h3>
+<div class="glass-panel">
+    <div class="section-header">
+        <h3>Distribution Center Registry</h3>
+        <span class="section-count">{{ count($data) }} centers</span>
+    </div>
     <div class="table-responsive">
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>ID</th><th>Nama</th><th>Kabupaten</th><th>Kordinat</th><th>Status</th>
+                    <th>ID</th><th>Name</th><th>Region</th><th>Coordinates</th><th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($data as $d)
+                @forelse($data as $d)
                 <tr>
-                    <td>{{ $d->id }}</td>
-                    <td>{{ $d->nama }}</td>
+                    <td class="text-mono">{{ $d->id }}</td>
+                    <td><strong>{{ $d->nama }}</strong></td>
                     <td>{{ $d->kabupaten->nama }}</td>
-                    <td>{{ $d->lat }}, {{ $d->long_decimal }}</td>
-                    <td>{{ $d->status_aktif ? 'Aktif' : 'Inaktif' }}</td>
+                    <td class="text-mono" style="font-size: 0.8rem;">{{ $d->lat }}, {{ $d->long_decimal }}</td>
+                    <td>
+                        @if($d->status_aktif)
+                            <span class="badge badge-success"><span class="badge-dot"></span> Active</span>
+                        @else
+                            <span class="badge badge-danger">Inactive</span>
+                        @endif
+                    </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="bi bi-building"></i></div>
+                            <div class="empty-state-text">No distribution centers yet. Add one above.</div>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

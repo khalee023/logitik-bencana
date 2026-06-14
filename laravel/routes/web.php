@@ -42,6 +42,10 @@ Route::prefix('admin-pusat')->middleware(['auth', 'role:Pusat'])->group(function
     // Armada
     Route::get('/armada', [AdminPusatController::class, 'armadaIndex'])->name('admin-pusat.armada.index');
     Route::post('/armada', [AdminPusatController::class, 'armadaStore'])->name('admin-pusat.armada.store');
+
+    // Rute
+    Route::get('/rute', [AdminPusatController::class, 'ruteIndex'])->name('admin-pusat.rute.index');
+    Route::post('/rute', [AdminPusatController::class, 'ruteStore'])->name('admin-pusat.rute.store');
 });
 
 // === Admin Daerah (role: Daerah) ===
@@ -51,6 +55,7 @@ Route::prefix('admin-daerah')->middleware(['auth', 'role:Daerah'])->group(functi
     Route::post('/demand', [AdminDaerahController::class, 'demandStore'])->name('admin-daerah.demand.store');
     Route::put('/demand/{demand}', [AdminDaerahController::class, 'demandUpdate'])->name('admin-daerah.demand.update');
     Route::post('/demand/{demand}/queue', [AdminDaerahController::class, 'demandQueue'])->name('admin-daerah.demand.queue');
+    Route::post('/demand/{demand}/confirm', [AdminDaerahController::class, 'confirmDemand'])->name('admin-daerah.demand.confirm');
 });
 
 // === Tim SAR (role: SAR) ===
@@ -58,12 +63,14 @@ Route::prefix('sar')->middleware(['auth', 'role:SAR'])->group(function () {
     Route::get('/', [SarController::class, 'dashboard'])->name('sar.dashboard');
     Route::post('/rute/toggle-access', [SarController::class, 'toggleRouteAccess'])->name('api.rute.toggle');
     Route::post('/desa/update-status', [SarController::class, 'updateDesaStatus'])->name('api.desa.status');
+    Route::post('/desa/update-metrics', [SarController::class, 'updateDesaMetrics'])->name('api.desa.metrics');
 });
 
 // === Koordinator (role: Koor) ===
 Route::prefix('koordinator')->middleware(['auth', 'role:Koor'])->group(function () {
     Route::get('/', [KoordinatorController::class, 'dashboard'])->name('koordinator.dashboard');
     Route::post('/optimize', [KoordinatorController::class, 'triggerOptimization'])->name('koordinator.optimize');
+    Route::post('/update-urgency', [KoordinatorController::class, 'updateUrgency'])->name('koordinator.update-urgency');
     Route::get('/review', [KoordinatorController::class, 'reviewSimulation'])->name('koordinator.review');
     Route::post('/approve', [KoordinatorController::class, 'approveSimulation'])->name('koordinator.approve');
     Route::post('/reject', [KoordinatorController::class, 'rejectSimulation'])->name('koordinator.reject');

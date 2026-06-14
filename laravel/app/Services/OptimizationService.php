@@ -36,7 +36,7 @@ class OptimizationService
         $depots = PusatDistribusi::aktif()->get();
 
         if ($depots->isEmpty()) {
-            throw new \Exception('Tidak ada pusat distribusi aktif.');
+            throw new \Exception('No active distribution centers available.');
         }
 
         // 2. Ambil semua demand berstatus Queued
@@ -45,14 +45,14 @@ class OptimizationService
             ->get();
 
         if ($demands->isEmpty()) {
-            throw new \Exception('Tidak ada permintaan bantuan yang mengantre (status: Queued).');
+            throw new \Exception('No demand requests in queue (status: Queued).');
         }
 
         // 3. Ambil armada tersedia
         $fleet = ArmadaKendaraan::available()->get();
 
         if ($fleet->isEmpty()) {
-            throw new \Exception('Tidak ada armada kendaraan yang tersedia.');
+            throw new \Exception('No fleet vehicles available.');
         }
 
         // 4. Ambil graf rute
@@ -327,13 +327,13 @@ class OptimizationService
      */
     public function predictUrgency(): void
     {
-        // Get all desa IDs that have Queued demands
-        $desaIds = DemandKebutuhan::byStatus('Queued')
+        // Get all desa IDs that have Queued or Draft demands
+        $desaIds = DemandKebutuhan::whereIn('status', ['Queued', 'Draft'])
             ->distinct()
             ->pluck('id_desa');
 
         if ($desaIds->isEmpty()) {
-            return; // No queued demands, nothing to predict
+            return; // No demands, nothing to predict
         }
 
         // Collect feature vectors for each desa
@@ -362,12 +362,12 @@ class OptimizationService
 
             $urgencyScores = $response->json('urgency_scores', []);
 
-            // Update urgency_score and target_deadline_jam on Queued demands
+            // Update urgency_score and target_deadline_jam on Queued and Draft demands
             foreach ($urgencyScores as $desaId => $score) {
                 $deadline = round(72 / ($score + 1), 2);
 
                 DemandKebutuhan::where('id_desa', $desaId)
-                    ->byStatus('Queued')
+                    ->whereIn('status', ['Queued', 'Draft'])
                     ->update([
                         'urgency_score' => $score,
                         'target_deadline_jam' => $deadline,

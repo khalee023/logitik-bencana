@@ -121,4 +121,17 @@ class AdminDaerahController extends Controller
 
         return redirect()->back()->with('success', 'Data kebutuhan berhasil diperbarui.');
     }
+
+    /**
+     * Konfirmasi kedatangan barang (mengubah status dari Delivered -> Fulfilled).
+     */
+    public function confirmDemand(Request $request, DemandKebutuhan $demand)
+    {
+        if ($demand->status !== 'Delivered') {
+            return redirect()->back()->with('error', 'Only demands with Delivered status can be confirmed.');
+        }
+
+        $demand->update(['status' => 'Fulfilled']);
+        return redirect()->back()->with('success', 'Arrival confirmed. Demand is now fulfilled.');
+    }
 }
