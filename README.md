@@ -99,14 +99,15 @@ Sistem OR-Tools akan mengembalikan hasil berupa JSON:
 
 Sistem ini memiliki berbagai *dashboard* berbasis otorisasi dan kontrol akses peran (RBAC):
 
-![Tampilan Dashboard Admin](placeholder_ui_admin.png)
-*(Silakan masukkan screenshot Dashboard Admin Pusat / Daerah di sini)*
+Tampilan Dashboard admin
+![Tampilan Dashboard Admin Pusat](assets/images/dashboard_admin.png) 
 
-![Tampilan Peta Interaktif](placeholder_ui_map.png)
-*(Silakan masukkan screenshot Leaflet Map / Peta Interaktif di sini)*
+Tampilan peta interaktif
+![Tampilan Peta Interaktif](assets/images/peta_interactive.png)
 
-![Tampilan Review Optimasi](placeholder_ui_review.png)
-*(Silakan masukkan screenshot Halaman Review Rute oleh Koordinator di sini)*
+Tampilan review otomatis
+![Tampilan Review Optimasi 1](assets/images/review_optimasi_1.png)
+![Tampilan Review Optimasi 2](assets/images/review_optimasi_2.png)
 
 - **Public Map**: Tampilan peta untuk masyarakat umum berbasis `Leaflet.js` yang menunjukkan GeoJSON desa terdampak, depot, armada, dan rute.
 - **Admin Pusat**: CRUD Data Master (Stok, Armada, Pusat Distribusi, Master Bantuan).
