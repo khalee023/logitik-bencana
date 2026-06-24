@@ -1,7 +1,6 @@
 # Disaster Logistics Command Center (DLCC) ERP
 
-![DLCC Banner](placeholder_banner.png)
-*(Silakan masukkan gambar banner aplikasi di sini)*
+![DLCC Banner](assets/images/logo_dlcc.png)
 
 Disaster Logistics Command Center (DLCC) ERP adalah sebuah sistem Enterprise Resource Planning untuk manajemen logistik kebencanaan. Sistem ini memanfaatkan Machine Learning untuk memprediksi tingkat urgensi kebutuhan wilayah terdampak dan algoritma Operations Research (CVRPTW) untuk mengoptimalkan rute distribusi bantuan logistik.
 
