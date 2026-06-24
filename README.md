@@ -25,8 +25,7 @@ Sistem ini terbagi menjadi beberapa komponen utama yang bekerja secara bersamaan
 
 Sistem ini menggunakan SQLite dengan 11 skema migrasi dan 10 tabel utama:
 
-![Skema Database](placeholder_database_schema.png)
-*(Silakan masukkan gambar Entity Relationship Diagram / Skema DB di sini)*
+![Skema Database](assets/images/erd_alokasi_bencana.png)
 
 1. `akun_pemerintah` — Menyimpan data pengguna dengan 4 Role berbeda beserta relasi ke kabupaten.
 2. `kabupaten` — Data wilayah administratif.
@@ -45,8 +44,7 @@ Sistem ini menggunakan SQLite dengan 11 skema migrasi dan 10 tabel utama:
 
 Alur kerja aplikasi dirancang menggunakan pendekatan *Human-in-the-Loop* dan *Two-Phase Protocol* untuk pengiriman data:
 
-![Alur Pemanggilan](placeholder_business_flow.png)
-*(Silakan masukkan gambar Business Flow / Flowchart di sini)*
+![Alur Pemanggilan](assets/images/flowchart.png)
 
 1. **Input Demand (Admin Daerah)**: Admin Daerah menginputkan permintaan (Demand) barang bantuan untuk desa terdampak. Sistem akan menghitung *BurnRate* awal, dengan status awal `Draft`.
 2. **Pengantrian Demand**: Admin Daerah mereview demand dan memindahkannya ke status `Queued` (siap diproses oleh sistem optimasi).
