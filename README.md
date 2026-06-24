@@ -10,9 +10,6 @@ Disaster Logistics Command Center (DLCC) ERP adalah sebuah sistem Enterprise Res
 
 Sistem ini terbagi menjadi beberapa komponen utama yang bekerja secara bersamaan (Monolith + Microservice):
 
-![Arsitektur Sistem](placeholder_arsitektur.png)
-*(Silakan masukkan diagram arsitektur di sini)*
-
 1. **Frontend (Browser / User)**: Menggunakan Bootstrap 5 untuk Dashboard dan Leaflet.js untuk Peta Interaktif (Public Map).
 2. **Backend Utama (Laravel 11)**: Menangani Autentikasi (RBAC), Manajemen CRUD, Session, serta mengatur *State-Commit* dari hasil optimasi.
 3. **Microservice AI/OR (FastAPI)**: Menjalankan model Machine Learning (RandomForest) untuk *Urgency Prediction* dan OR-Tools untuk menyelesaikan masalah *Capacitated Vehicle Routing Problem with Time Windows* (CVRPTW).
